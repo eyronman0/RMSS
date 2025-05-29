@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['tenant_id'])) {
+    header("Location: login.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,7 +82,9 @@
       </nav>
       <!-- Main Content -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-5 py-4">
-        <div class="dashboard-header mb-2">Welcome, Resident!</div>
+        <div class="dashboard-header mb-2">
+          Welcome, <?= htmlspecialchars($_SESSION['tenant_name'] ?? 'Resident') ?>!
+        </div>
         <div class="mb-4">Announcements summary</div>
         <div class="row g-4">
           <div class="col-md-6 col-lg-4">

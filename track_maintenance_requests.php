@@ -1,15 +1,20 @@
 <?php
-session_start();
-$tenantName = $_SESSION['tenantName'] ?? ($_GET['tenantName'] ?? '');
+// filepath: c:\xampp2\htdocs\RMS\track_maintenance_requests.php
+
+// Read the JSON file
+$requests = [];
+$json_file = 'maintenance_requests.json';
+if (file_exists($json_file)) {
+    $json = file_get_contents($json_file);
+    $requests = json_decode($json, true);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Maintenance Requests</title>
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Track Maintenance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <style>
         body {
             background-color: #f4f4f4;
@@ -25,11 +30,6 @@ $tenantName = $_SESSION['tenantName'] ?? ($_GET['tenantName'] ?? '');
         .sidebar .nav-link.active, .sidebar .nav-link:hover {
             background: #2336a3;
             color: #fff;
-        }
-        @media (max-width: 767px) {
-            .sidebar {
-                min-height: auto;
-            }
         }
     </style>
 </head>
@@ -63,51 +63,38 @@ $tenantName = $_SESSION['tenantName'] ?? ($_GET['tenantName'] ?? '');
             </div>
         </nav>
         <!-- Main Content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-5 py-4">
-            <div class="mb-4 text-center">
-                <h1>Track Maintenance Requests</h1>
-            </div>
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h2 class="card-title mb-4">Your Requests</h2>
-                            <?php if ($tenantName): ?>
-                                <p class="card-text">Showing requests for: <strong><?php echo htmlspecialchars($tenantName); ?></strong></p>
-                            <?php endif; ?>
-                            <ul class="list-group">
-                            <?php
-                            $file = __DIR__ . '/maintenance_requests.json';
-                            $found = false;
-                            if ($tenantName && file_exists($file)) {
-                                $requests = json_decode(file_get_contents($file), true);
-                                foreach ($requests as $i => $req) {
-                                    if (isset($req['tenant']) && $req['tenant'] === $tenantName) {
-                                        $found = true;
-                                        $status = isset($req['status']) ? $req['status'] : 'Pending';
-                                        $badge = 'bg-secondary';
-                                        if ($status === 'Completed') $badge = 'bg-success';
-                                        elseif ($status === 'In Progress') $badge = 'bg-warning text-dark';
-                                        echo '<li class="list-group-item d-flex justify-content-between align-items-center">';
-                                        echo '<span>Request #' . ($i+1) . ': ' . htmlspecialchars($req['description']) . '</span>';
-                                        echo '<span class="badge ' . $badge . '">' . htmlspecialchars($status) . '</span>';
-                                        echo '</li>';
-                                    }
-                                }
-                            }
-                            if (!$found) {
-                                echo '<li class="list-group-item">No requests found.</li>';
-                            }
-                            ?>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="container mt-5">
+                <h2>Maintenance Requests</h2>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($requests)): ?>
+                            <?php foreach ($requests as $req): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($req['tenant']) ?></td>
+                                    <td><?= htmlspecialchars($req['type']) ?></td>
+                                    <td><?= htmlspecialchars($req['description']) ?></td>
+                                    <td><?= htmlspecialchars($req['date']) ?></td>
+                                    <td><?= htmlspecialchars($req['status']) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr><td colspan="5" class="text-center">No maintenance requests found.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </main>
     </div>
 </div>
-<!-- Bootstrap JS Bundle CDN -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

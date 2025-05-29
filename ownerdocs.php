@@ -46,7 +46,7 @@ $documents_result = $conn->query("
     </nav>
     <main class="col-md-10 ms-sm-auto px-md-4 py-4">
       <h1>Documents</h1>
-      <form action="owner_documents.php" method="POST" enctype="multipart/form-data" class="mb-4">
+      <form action="ownerdocs.php" method="POST" enctype="multipart/form-data" class="mb-4">
         <div class="row g-3 align-items-center">
           <div class="col-md-4">
             <select name="tenant_id" class="form-select" required>
@@ -61,6 +61,9 @@ $documents_result = $conn->query("
           </div>
           <div class="col-md-4">
             <button type="submit" class="btn btn-primary w-100">Upload Document</button>
+          </div>
+          <div class="col-md-4">
+            <input type="text" name="doc_type" class="form-control" placeholder="Document Type (e.g., Lease)" required>
           </div>
         </div>
       </form>
@@ -78,8 +81,10 @@ $documents_result = $conn->query("
             <td><?= htmlspecialchars($doc['tenant_name']) ?></td>
             <td><a href="<?= htmlspecialchars($doc['filename']) ?>" target="_blank"><?= basename($doc['filename']) ?></a></td>
             <td><?= htmlspecialchars($doc['upload_date']) ?></td>
+            <td><?= htmlspecialchars($doc['doc_type']) ?></td>
           </tr>
           <?php endwhile; ?>
+          
         </tbody>
       </table>
     </main>

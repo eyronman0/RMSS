@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['owner_id'])) {
+    header("Location: ownerlogin.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

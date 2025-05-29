@@ -37,7 +37,7 @@
                 <h2 class="fs-5 text-center mb-4">Apartment Management</h2>
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2">
-                        <a class="nav-link" href="main.html">Dashboard</a>
+                        <a class="nav-link" href="main.php">Dashboard</a>
                     </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link" href="personal_info.php">View Personal Info</a>

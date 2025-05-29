@@ -9,6 +9,27 @@ $sql = "SELECT
         JOIN units u ON t.unit_id = u.id
         ORDER BY p.payment_date DESC";
 $result = $conn->query($sql);
+if (isset($_POST['add_payment'])) {
+    $tenant_id = $_POST['tenant_id'];
+    $amount = $_POST['amount'];
+    $payment_date = $_POST['payment_date'];
+
+    // Insert payment into database
+    $stmt = $conn->prepare("INSERT INTO payments (tenant_id, amount, payment_date) VALUES (?, ?, ?)");
+    $stmt->bind_param("ids", $tenant_id, $amount, $payment_date);
+    if ($stmt->execute()) {
+        // Fetch tenant and unit info for receipt
+        $receipt_stmt = $conn->prepare("SELECT CONCAT(t.first_name, ' ', t.last_name) AS name, u.unit_number FROM tenants t JOIN units u ON t.unit_id = u.id WHERE t.id = ?");
+        $receipt_stmt->bind_param("i", $tenant_id);
+        $receipt_stmt->execute();
+        $receipt_result = $receipt_stmt->get_result();
+        $receipt = $receipt_result->fetch_assoc();
+        $receipt['amount'] = $amount;
+        $receipt['payment_date'] = $payment_date;
+    } else {
+        $receipt = false;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -87,8 +108,50 @@ $result = $conn->query($sql);
                     </ul>
                 </div>
             </nav>
-
     <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+      <?php
+        // Fetch tenants for dropdown
+        $tenants = $conn->query("SELECT t.id, CONCAT(t.first_name, ' ', t.last_name) AS name, u.unit_number FROM tenants t JOIN units u ON t.unit_id = u.id");
+        ?>
+        <div class="card mb-4 p-3">
+          <h3>Add Payment</h3>
+          <form method="post" action="" class="row g-3">
+            <div class="col-md-4">
+              <label for="tenant_id" class="form-label">Tenant</label>
+              <select name="tenant_id" id="tenant_id" class="form-select" required>
+                <option value="">Select Tenant</option>
+                <?php while($tenant = $tenants->fetch_assoc()): ?>
+                  <option value="<?= $tenant['id'] ?>">
+                    <?= htmlspecialchars($tenant['name']) ?> (Unit <?= htmlspecialchars($tenant['unit_number']) ?>)
+                  </option>
+                <?php endwhile; ?>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="amount" class="form-label">Amount</label>
+              <input type="number" step="0.01" min="0" name="amount" id="amount" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label for="payment_date" class="form-label">Payment Date</label>
+              <input type="date" name="payment_date" id="payment_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" name="add_payment" class="btn btn-primary w-100">Save & Print Receipt</button>
+            </div>
+          </form>
+        </div>
+        <?php if (isset($receipt) && $receipt): ?>
+        <div id="receipt" class="alert alert-success mt-3">
+          <h4>Payment Receipt</h4>
+          <p><strong>Tenant:</strong> <?= htmlspecialchars($receipt['name']) ?></p>
+          <p><strong>Unit:</strong> <?= htmlspecialchars($receipt['unit_number']) ?></p>
+          <p><strong>Amount:</strong> $<?= number_format($receipt['amount'], 2) ?></p>
+          <p><strong>Date:</strong> <?= htmlspecialchars($receipt['payment_date']) ?></p>
+          <button onclick="window.print()" class="btn btn-secondary mt-2">Print Receipt</button>
+        </div>
+        <?php elseif (isset($receipt) && $receipt === false): ?>
+        <div class="alert alert-danger mt-3">Failed to save payment.</div>
+        <?php endif; ?>
       <h1>Payment History</h1>
       <table class="table table-striped table-bordered">
         <thead>
@@ -110,6 +173,17 @@ $result = $conn->query($sql);
           <?php endwhile; ?>
         </tbody>
       </table>
+      <?php
+      $total_income = 0;
+      $result2 = $conn->query($sql);
+      while($row = $result2->fetch_assoc()) {
+          $total_income += $row['amount'];
+      }
+      ?>
+      <div class="alert alert-info mb-4">
+        <strong>Total Income:</strong> $<?= number_format($total_income, 2) ?>
+      </div>
+      
     </main>
   </div>
 </div>
